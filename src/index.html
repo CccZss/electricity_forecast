@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+	<meta charset="utf-8">
+	<!-- 
+		项目：用户电量可视化展示
+		贡献者：蔡泽胜，苏智龙，潘诗琪
+		技术栈：D3.js
+	 -->
+	<title>webpack-test</title>
+	<link rel="shortcut icon" type="image/x-icon" href="${require('./images/small.png')}" media="screen">
+</head>
+<body>
+	<div class="user-nav">
+		<ul>
+			<li>
+				<p>第一梯队</p>
+				<ul>
+					<li>user1</li>
+					<li>user1</li>
+					<li>user1</li>
+					<li>user1</li>
+				</ul>
+			</li>
+			<li>
+				<p>第二梯队</p>
+				<ul>
+					<li>user1</li>
+					<li>user1</li>
+					<li>user1</li>
+					<li>user1</li>
+				</ul>
+			</li>
+			<li>
+				<p>第三梯队</p>
+				<ul>
+					<li>user1</li>
+					<li>user1</li>
+					<li>user1</li>
+					<li>user1</li>
+				</ul>
+			</li>
+		</ul>
+	</div>
+	<div class="contained">
+		<!-- 折线图展示 -->
+		<div class="chart" id="line-chart">
+		</div>
+
+		<!-- 饼图展示 -->
+		<div class="chart" id="pie-chart">
+		</div>
+		
+		<!-- 列表展示 -->
+		<div id="list"></div>
+	</div>
+</body>
+</html>

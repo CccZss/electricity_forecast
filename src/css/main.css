@@ -1,0 +1,67 @@
+
+/** 整体布局样式  **/
+	html, body {
+		height: 100%;
+		min-width: 1500px;
+	}
+	.user-nav {
+		position: fixed;
+		left: 0;
+		top: 0;
+
+		width: 200px;
+		min-height: 100%;
+
+		background-color: #eaeaea;
+
+		box-shadow: 2px 2px 5px 2px #464646;
+	}
+
+	.contained { 
+		margin-left: 200px;
+		width: calc(100% - 200px);
+		height: 100%;
+		min-height: 100%;
+	}
+
+	.chart{
+		float: left;
+		margin: 20px 0 0 20px;
+		box-sizing: border-box;
+	}
+
+	#line-chart {
+		width: calc(60%);
+		box-shadow: 2px 2px 11px 2px #464646;
+	}
+
+	#pie-chart {
+		width: calc(40% - 60px);
+		height: 60%;
+		box-shadow: 2px 2px 11px 2px #464646;
+	}
+
+/** 用户列表样式 **/
+
+/** 折线图样式 **/
+	.line {
+	  fill: none;
+	  stroke: steelblue;
+	  stroke-width: 1.5px;
+	}
+	.linecircle{
+		cursor: pointer;
+	}
+
+	.tips-border {
+	    fill: #fbfbfb;
+	    stroke: #c5c0c0;       
+	}
+
+	.tips{
+		display: none;
+	}
+
+/** 饼图样式 **/
+
+/** 列表样式 **/

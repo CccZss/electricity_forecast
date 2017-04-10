@@ -131,7 +131,8 @@ var config = {
 	devServer: {
 		contentBase: './src',
 		historyApiFallback: true
-	}
+	},
+	devtool: 'source-map'
 };
 
 module.exports = config;

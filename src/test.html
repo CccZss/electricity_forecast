@@ -43,33 +43,37 @@
 	</div>
 	<div class="contained">
 		<div class="chart" id="line-chart">
-			<button onClick="linechart.drawChart(dataOfYear2);">刷新数据</button>
+			<!-- <button onClick="linechart.updateData(dataOfMonth);">刷新数据</button> -->
+			<button onClick="text()">刷新数据</button>
 		</div>
 		<div class="chart" id="pie-chart">
 		</div>
 	</div>
 </body>
-<script src="https://d3js.org/d3.v4.js"></script>
+<script src="./js/d3.v4.js"></script>
 <script>
 
 /*测试数据*/
 	var year = ['2011-01-01','2012-01-01','2013-01-01','2014-01-01','2015-01-01','2016-01-01'];
-	var usersY = {
+	var yearUsers = {
 		userA : ['27417365.82', '27350277.50', '29039208.60','29738205.01','29428953.10','20371260.20'],
 		userB : ['25517365.82', '2650277.50', '28039208.60','26738205.01','30428953.10','25571260.20']
 	}
 
-	var usersY2 = {
-		userA : ['27417365.82', '27350277.50', '29039208.60','29738205.01','29428953.10','20371260.20']
-	}
-
 	var month = ['2011-01-01','2011-02-01','2011-03-01','2011-04-01','2011-05-01','2011-06-01','2011-07-01','2011-08-01','2011-09-01','2011-10-01','2011-11-01','2011-12-01'];
-
-	var users = {
+	var monthUsers = {
 	   	userA : ['2811382.47','1694584.70','1220201.90','2450110.24','2406544.63','2470264.31','2371420.03','2477325.64','2483846.50','2341947.51','2295317.00','2394420.89'],
 	   	userB : ['818417.09','658161.06','468977.58','808060.12','802080.39','824348.33','799232.09','875871.27','878438.49','816722.59','773165.36','788942.20'],
 		userC : ['147501.72','120218.61','77477.19','161132.12','161733.72','166525.84','155475.88','166305.03','172342.13','158246.86','156226.42','149371.12']
 	}
+
+	var season = ['2011-01-01','2011-04-01','2011-07-01','2011-10-01']
+	var seasonUsers = {
+		userA : ['8176279.31','7326919.18','150292181.98','7031685.40'],
+		userB : ['1945555.73','2434488.84','53214115.12','2378830.15'],
+		userC : ['345197.52','489391.68','9986824.74','463844.40']	
+	}
+
 /**
  * [getChartDatas 把原始的数据转化为折线图类 LineChart 需要的数据]
  * @param  {[type]} xAxisDates [x轴的数据，即时间数组 ：['2011-01-01','2011-02-01','2011-03-01',.....]
@@ -104,9 +108,16 @@
 			userDatas: userDatas
 		}
 	}
-	var dataOfMonth = getChartDatas(month,users,'month')
-	var dataOfYear = getChartDatas(year,usersY,'year')
-	var dataOfYear2 = getChartDatas(year,usersY2,'year')
+	var dataOfMonth = getChartDatas(month,monthUsers,'month')
+	var dataOfYear = getChartDatas(year,yearUsers,'year')
+	var dataOfSeason = getChartDatas(season,seasonUsers,'season')
+
+	var i = 0;
+	function text(){
+		if(++i === 3) i = 0;
+		var arr = [dataOfSeason,dataOfMonth,dataOfYear]
+		linechart.updateData(arr[i])
+	}
 
 function LineChart (data){
 
@@ -116,11 +127,14 @@ function LineChart (data){
 
 	var lines=[]; //保存折线图对象
  	var lineNames=[]; //保存系列名称
- 	var lineColors=["#F00","#09F","#0F0"];
+ 	// var lineColors=["#F00","#09F","#0F0"];
+ 	var lineColors=["#F00","#09F","#0F0","#FFFF00","#3A0088","#000","#FF0088","#FF0000","#FF8800","#00DDDD","#0000CC","#770077","#FF5511","#FFCC22","#00DD00"]
  	var currentLineNum=0;
 
  	var title="用电走势图";
   	var subTitle="2013年1月 至 2013年6月";
+
+  	var oldDatas = []
 
 	var lineChartDom = document.querySelector('#line-chart');
 
@@ -132,7 +146,7 @@ function LineChart (data){
 
   	currentLineNum=userDatas.length;
 
-  	lineNames = getLineName();
+  	lineNames = getLineName(userDatas);
 	
 	var svg = d3.select('#line-chart')
   		.append('svg')
@@ -196,20 +210,28 @@ function LineChart (data){
 	    .range([0, width]);
 
 	var yScale = d3.scaleLinear()
-	    .domain([0,getMaxdata(userDatas)])
+	    .domain([getMinData(userDatas),getMaxData(userDatas)])
 	    .range([height, 0]);
 
 	var xAxis = null;
 
-	if(unit==='month'){
+	if(unit === "month"){
 		xAxis = d3.axisBottom(xScale)
 		  .ticks(d3.timeMonth)
 		  .tickFormat(function(d, i){
 		  		return d3.timeFormat("%-m")(d)
 		  })
-	} else if(unit==='year'){
+	} else if(unit === "year"){
 		xAxis = d3.axisBottom(xScale)
 		  .ticks(d3.timeYear)
+	} else if(unit === "season"){
+		xAxis = d3.axisBottom(xScale)
+			.ticks(4)
+			.tickFormat(function(d, i){
+		  		if(i == 0) return '夏';
+		  		else if(i == 1) return '秋';
+		  		else return '冬';
+		  })
 	}
 
 	var yAxis = d3.axisRight(yScale)
@@ -233,7 +255,7 @@ function LineChart (data){
 		 .text(unit)
 		 .attr("stroke", "black")
 		 .attr("transform","translate(" + (width + 25) + ", 15)")
-	  	g.call(xAxis).select(".domain").remove();
+	  	g.call(xAxis)
 	}
 
 	function customYAxis(g) {
@@ -242,6 +264,159 @@ function LineChart (data){
 	  g.selectAll(".tick line").attr("stroke", "#777").attr("stroke-dasharray", "2,2");
 	  g.selectAll(".tick text").attr("x", -25).attr("dy", 0);
 	}
+
+    /*画线类*/
+	function LineObject(g, userName ,userData, lineColor, xScale, yScale) {
+		this.group=g;
+        this.path=null;
+        // this.oldDatas=[];
+        this.userName = userName;
+        this.userData = userData;
+        this.lineColor = lineColor;
+        this.xScale = xScale;
+        this.yScale = yScale;
+        this.lineGrounp = null;
+	}
+	LineObject.prototype.init = function() {
+
+    	var userData = this.userData;
+    	var userName = this.userName
+    	var xScale = this.xScale
+    	var lineColor = this.lineColor
+    	var group = this.group
+    	this.lineGrounp = group.append('g')
+
+    	var line = d3.line()
+	  		.x(function(d) { 
+	  			return xScale(d.date); 
+	  		})
+	  		.y(function(d) { 
+	  			return yScale(d.value); 
+	  		})
+	  		.curve(d3.curveCatmullRom.alpha(0.5))
+
+	  	this.path = this.lineGrounp.append('path')
+	  				.attr('userName', userName)
+	  				.attr('class', 'line')
+  					.attr('d', line(userData))
+  					.style("stroke", lineColor)
+  					.style("stroke-opacity",0.9);
+
+  		this.lineGrounp.selectAll('circle')
+			.data(userData)
+			.enter()
+			.append('circle')
+			.attr('userName',o)
+			.attr('class', 'linecircle')
+			.attr('cx', line.x())
+			.attr('cy', line.y())
+			.attr('r', 3.5)
+			.attr("fill",lineColor)
+			.on('mouseover', function() {
+			    d3.select(this).attr('r', 5);
+
+			    var m = d3.mouse(this),
+			        cx = m[0] - margin.left,
+			    	x0 = xScale.invert(cx),
+			   		i = (d3.bisector(function(d) {
+			      		return d.date;
+			    	}).left)(userData, x0);
+			 
+			    var d = userData[i];
+			 
+			    function formatWording(d) {
+			      return '日期：' + d3.timeFormat('%Y-%m-%d')(d.date);
+			    }
+			    wording1.text(formatWording(d));
+			    wording2.text('用电量：' + d.value);
+
+			    var x1 = (m[0]+150) > width ? (m[0]-190) : (m[0]+20) 
+
+			 
+			    d3.select('.tips')
+			      .attr('transform', 'translate(' + x1 + ',' + (m[1]-10) + ')');
+			 
+			    d3.select('.tips').style('display', 'block');
+			})
+			.on('mouseout', function() {
+			    d3.select(this).transition().duration(500).attr('r', 3.5);
+			    d3.select('.tips').style('display', 'none');
+			});
+    }
+    LineObject.prototype.remove = function(){
+    	this.path.remove();
+    }
+    LineObject.prototype.update = function(data){
+    	var oldData = this.userData,
+    		path = this.path,
+    		group = this.group,
+    		userName = this.userName,
+    		lineColor = this.lineColor;
+
+        var dataLen=data.length;
+         
+        //横轴数据动画
+
+    	var line = d3.line()
+	  		.x(function(d, i) { 
+	  			return xScale(d.date); 
+	  		})
+	  		.y(function(d, i) { 
+	  			return yScale(d.value);
+	  		})
+	  		.curve(d3.curveCatmullRom.alpha(0.5))
+
+	  	path.attr('d', line(data));
+
+	  	var tempData=oldData.slice(0,data.length);
+        var circle = this.lineGrounp.selectAll("circle").data(tempData);
+        circle.exit().remove();
+
+        this.lineGrounp.selectAll('circle').data(data).enter().append('circle')
+
+        this.lineGrounp.selectAll('circle')
+			.data(data)
+			.attr('userName',userName)
+			.attr('class', 'linecircle')
+			.attr('cx', function(d) { 
+	  				return xScale(d.date); 
+	  		})
+			.attr('cy', function(d){
+				return yScale(d.value)
+			})
+			.attr('r', 3.5)
+			.attr("fill",lineColor)
+			.on('mouseover', function() {
+			    d3.select(this).attr('r', 5);
+
+			    var m = d3.mouse(this),
+			        cx = m[0] - margin.left,
+			    	x0 = xScale.invert(cx),
+			   		i = (d3.bisector(function(d) {
+			      		return d.date;
+			    	}).left)(data, x0);
+			 
+			    var d = data[i];
+			 
+			    function formatWording(d) {
+			      return '日期：' + d3.timeFormat('%Y-%m-%d')(d.date);
+			    }
+			    wording1.text(formatWording(d));
+			    wording2.text('用电量：' + d.value);
+
+			    var x1 = (m[0]+150) > width ? (m[0]-190) : (m[0]+20) 
+
+			 
+			    d3.select('.tips')
+			      .attr('transform', 'translate(' + x1 + ',' + (m[1]-10) + ')');
+			 
+			    d3.select('.tips').style('display', 'block');
+			})
+			.on('mouseout', function() {
+			    d3.select(this).transition().duration(500).attr('r', 3.5);
+			    d3.select('.tips').style('display', 'none');
+			});
+    }
 
 	var lineObject = null;
 	for(var o in userDatas){
@@ -252,207 +427,73 @@ function LineChart (data){
     	}
     }
 
-    /*  //删除多余的线条，如果有的话
-    if(userDatas.length<currentLineNum) {
-      	for(i=userDatas.length;i<currentLineNum;i++){
-            lineObject=lines[i];
-            lineObject.remove();
-        }
-        lines.splice(userDatas.length,currentLineNum-userDatas.length);
-    }*/
 
-
-	function LineObject(g,userName ,userData, lineColor, xScale, yScale) {
-		this.group=null;
-        this.path=null;
-        this.oldDatas=[];
-        this.userName = userName;
-        this.userData = userData;
-        this.lineColor = lineColor;
-
-        this.init = function() {
-
-	    	var arr = this.userData;
-	    	this.group = g;
-
-	    	var line = d3.line()
-		  		.x(function(d) { 
-		  			return xScale(d.date); 
-		  		})
-		  		.y(function(d) { 
-		  			return yScale(d.value); 
-		  		})
-		  		.curve(d3.curveCatmullRom.alpha(0.5))
-
-		  	this.path = this.group.append('path')
-		  				.attr('userName', this.userName)
-		  				.attr('class', 'line')
-	  					.attr('d', line(this.userData))
-	  					.style("stroke", this.lineColor)
-	  					.style("stroke-opacity",0.9);
-
-	  		this.group
-	  			.append('g')
-				.selectAll('circle')
-				.data(this.userData)
-				.enter()
-				.append('circle')
-				.attr('userName',o)
-				.attr('class', 'linecircle')
-				.attr('cx', line.x())
-				.attr('cy', line.y())
-				.attr('r', 3.5)
-				.attr("fill",lineColor)
-				.on('mouseover', function() {
-				    d3.select(this).attr('r', 5);
-
-				    var m = d3.mouse(this),
-				        cx = m[0] - margin.left,
-				    	x0 = xScale.invert(cx),
-				   		i = (d3.bisector(function(d) {
-				      		return d.date;
-				    	}).left)(userData, x0);
-				 
-				    var d = userData[i];
-				 
-				    function formatWording(d) {
-				      return '日期：' + d3.timeFormat('%Y-%m-%d')(d.date);
-				    }
-				    wording1.text(formatWording(d));
-				    wording2.text('用电量：' + d.value);
-
-				    var x1 = (m[0]+150) > width ? (m[0]-190) : (m[0]+20) 
-
-				 
-				    d3.select('.tips')
-				      .attr('transform', 'translate(' + x1 + ',' + (m[1]-10) + ')');
-				 
-				    d3.select('.tips').style('display', 'block');
-				})
-				.on('mouseout', function() {
-				    d3.select(this).transition().duration(500).attr('r', 3.5);
-				    d3.select('.tips').style('display', 'none');
-				});
-        }
-
-        this.remove= function(){
-        	this.group.remove();
-        }
-
-	}
-
-	this.drawChart = function (data){
+	this.updateData = function (data){
 		var _duration = 1000;
 
 		uploadData(data);
 
-    /*	g.selectAll('g').remove()
-		g.selectAll('circle').remove()
-		g.selectAll('path').remove()
-		xAxisGroup.remove()
-		yAxisGroup.remove()*/
+		var oldDatalen = getObjLength(oldDatas),
+			dataLen = getObjLength(userDatas),
+			userDataslist = Object.getOwnPropertyNames(userDatas)
 
-		// legend = g.append("g");
-
-		addLegend();
-
-		var lineObject = null;
-
-		/*for(var o in userDatas){
-	    	if(lineNames.indexOf(o) < currentLineNum){
-	    		lineObject = lines[index];
-	    		// lineObject.movieBegin();
-	    	}else{
-	    		lineObject = new LineObject(g, o, userDatas[o], lineColors[index],xScale, yScale);
-	    		lineObject.init();
+		var lineObject = null
+		for(var i=0; i<oldDatalen; i++){
+			if(i < dataLen){
+				//更新线段
+				lineObject = lines[i];
+				lineObject.update(userDatas[userDataslist[i]])
+			}else{
+				//删除线段
+	            	lineObject=lines[i];
+	            	lineObject.lineGrounp.remove();
+	        }
+		}
+        lines.splice(dataLen,oldDatalen-dataLen);
+		if(dataLen > oldDatalen){
+			//添加线段
+			for(var i = oldDatalen; i < dataLen; i++){
+				lineObject = new LineObject(g, userDataslist[i], userDatas[userDataslist[i]], lineColors[i],xScale, yScale);
+				lineObject.init();
 	    		lines.push(lineObject);
-	    	}
-	    }
-
-	    if(lineNames.length < currentLineNum){
-	    	for(var i = lineNames.length; i < currentLineNum; i++){
-	    		lineObject = lines[i]
-	    		lineObject.remove();
-	    	}
-	    	lines.splice(lineNames.length,currentLineNum-dataset.length);
-	    }*/
-
-
-
-    	xScale = d3.scaleTime()
-		    .domain([new Date(d3.min(xAxisDates)), new Date(d3.max(xAxisDates))])
-		    .range([0, width]);
-
-		yScale = d3.scaleLinear()
-		    .domain([0,getMaxdata(userDatas)])
-		    .range([height, 0]);
-
-		if(unit==='month'){
-			xAxis = d3.axisBottom(xScale)
-			  .ticks(d3.timeMonth)
-			  .tickFormat(function(d, i){
-			  		return d3.timeFormat("%-m")(d)
-			  })
-		} else if(unit==='year'){
-			xAxis = d3.axisBottom(xScale)
-			  .ticks(d3.timeYear)
+			}
 		}
-
-		yAxis = d3.axisRight(yScale)
-		    .tickSize(width)
-		    .tickFormat(function(d) {
-		      var s = d3.format(".1f")(d / 1e6);
-		      return this.parentNode.nextSibling
-		          ? "" + s
-		          : "" + s + " 百万伏";
-		    });
-
-		g.append("g")
-		    .attr("transform", "translate(0," + height + ")")
-		    .call(customXAxis);
-
-		g.append("g")
-		 .call(customYAxis);
-
-		function customXAxis(g) {
-			g.append('text')
-			 .text(unit)
-			 .attr("stroke", "black")
-			 .attr("transform","translate(" + (width + 25) + ", 15)")
-		  	g.call(xAxis).select(".domain").remove();
-		}
-
-		function customYAxis(g) {
-		  g.call(yAxis);
-		  g.select(".domain").remove();
-		  g.selectAll(".tick line").attr("stroke", "#777").attr("stroke-dasharray", "2,2");
-		  g.selectAll(".tick text").attr("x", -25).attr("dy", 0);
-		}
-
-	    for(var o in userDatas){
-			if(lineNames.indexOf(o) < lineNames.length){
-		    	lineObject = new LineObject(g, o, userDatas[o], lineColors[lineNames.indexOf(o)],xScale, yScale);
-		    	lineObject.init();
-		    	lines.push(lineObject);
-	    	}
-	    }
-         
-        currentLineNum=lineNames.length;
 
 	}
 
 
-    function getMaxdata(datas) {
+    function getMaxData(datas) {
         var maxdata=0;
         for(var o in userDatas){
 			for(var i=0; i<userDatas[o].length; i++){
 				maxdata=d3.max([maxdata,userDatas[o][i].value]);
 			}
 		}
-        return maxdata;
+		var a = maxdata.toExponential().toString().slice(0,1)
+		var b = maxdata.toExponential().toString().slice(-1)
+		var c = (Number(a)+1)+"e+"+b;
+		
+        return Number(c);
     }
 
-    function getLineName() {
+    function getMinData(datas){
+    	var maxdata = undefined;
+        for(var o in userDatas){
+			for(var i=0; i<userDatas[o].length; i++){
+				maxdata=d3.min([maxdata,userDatas[o][i].value]);
+			}
+		}
+        var a = maxdata.toExponential().toString().slice(0,1)
+		var b = maxdata.toExponential().toString().slice(-1)
+		var c = a+"e+"+b;
+		if(b <= 6){
+			c = 0
+		}
+		
+        return Number(c);
+    }
+
+    function getLineName(userDatas) {
     	var arr = [];
     	for(var o in userDatas){
     		arr.push(o)
@@ -465,8 +506,55 @@ function LineChart (data){
     	unit = data.unit;
 		userDatas = data.userDatas;
 		xAxisDates = data.xAxisDates;
-	 	lineNames = getLineName();
-	 	lines = [];
+	 	lineNames = getLineName(userDatas);
+
+	 	xScale = d3.scaleTime()
+	    .domain([new Date(d3.min(xAxisDates)), new Date(d3.max(xAxisDates))])
+	    .range([0, width]);
+
+		yScale = d3.scaleLinear()
+	    .domain([getMinData(userDatas),getMaxData(userDatas)])
+	    .range([height, 0]);
+
+		if(unit === "month"){
+			xAxis = d3.axisBottom(xScale)
+			  .ticks(d3.timeMonth)
+			  .tickFormat(function(d, i){
+			  		return d3.timeFormat("%-m")(d)
+			  })
+		} else if(unit === "year"){
+			xAxis = d3.axisBottom(xScale)
+			  .ticks(d3.timeYear)
+		} else if(unit === "season"){
+			xAxis = d3.axisBottom(xScale)
+				.ticks(4)
+				.tickFormat(function(d, i){
+			  		if(i == 0) return '夏';
+			  		else if(i == 1) return '秋';
+			  		else if(i == 2) return '冬';
+			  })
+		}
+
+		yAxis = d3.axisRight(yScale)
+	    .tickSize(width)
+	    .tickFormat(function(d) {
+	      var s = d3.format(".1f")(d / 1e6);
+	      return this.parentNode.nextSibling
+	          ? "" + s
+	          : "" + s + " 百万伏";
+	    });
+
+		xAxisGroup._groups[0][0].remove()
+		yAxisGroup._groups[0][0].remove()
+
+		xAxisGroup = g.append("g")
+		    .attr("transform", "translate(0," + height + ")")
+		    .call(customXAxis);
+
+		yAxisGroup = g.append("g")
+		 .call(customYAxis);
+
+		addLegend()
     }
 
     function addLegend() {
@@ -508,11 +596,24 @@ function LineChart (data){
          
         legend.attr("transform","translate("+(width+margin.left)+",0)");
     }
+
+    function getObjLength(obj){
+        return Object.getOwnPropertyNames(obj).length
+    }
 	
 }
 
-var linechart = new LineChart(dataOfMonth)
+var linechart = new LineChart(dataOfSeason)
 
+
+    /*  //删除多余的线条，如果有的话
+    if(userDatas.length<currentLineNum) {
+      	for(i=userDatas.length;i<currentLineNum;i++){
+            lineObject=lines[i];
+            lineObject.remove();
+        }
+        lines.splice(userDatas.length,currentLineNum-userDatas.length);
+    }*/
 	
 /*  
 	var line = d3.line()

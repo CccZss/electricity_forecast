@@ -66,14 +66,14 @@ import LineChart from './js/line_chart.js';
 
 const App = function() {
 
-	var lineChart = new LineChart(dataOfSeason);
+	var lineChart = new LineChart(dataOfMonth);
 	
-	/*
+	
 	// 测试用的按钮
 	document.querySelector('#line-chart button').addEventListener('click',function(e){
 		if(++i === 3) i = 0;
 		lineChart.updateData(arr[i])
-	},false)*/
+	},false)
 	
 }()
 

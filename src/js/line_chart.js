@@ -4,6 +4,7 @@ function LineChart (data){
 
 	var unit = data.unit;
 	var userDatas = data.userDatas;
+	var userDataslist = Object.getOwnPropertyNames(userDatas)
 	var xAxisDates = data.xAxisDates;
 
 	var lines=[]; //保存折线图对象
@@ -32,9 +33,10 @@ function LineChart (data){
 	var svg = d3.select('#line-chart')
   		.append('svg')
 
+    var titleGroup = svg.append('g');	
 
     if(title !== "") {
-        svg.append("g")
+        titleGroup.append("g")
         .append("text")
         .text(title)
         .attr("class","title")
@@ -45,7 +47,7 @@ function LineChart (data){
     }
 
   	if(subTitle!="") {
-        svg.append("g")
+        titleGroup.append("g")
         .append("text")
         .text(subTitle)
         .attr("class","subTitle")
@@ -59,13 +61,16 @@ function LineChart (data){
   	   .attr('height', height + margin.top + margin.bottom +  head_height)
 
   	//放置除了标题之外的所有东西
-    var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + (margin.top + head_height) + ")");
-
+    var chartGroup = svg.append("g").attr("transform", "translate(" + margin.left + "," + (margin.top + head_height) + ")");
+    
     //添加图例
-    var legend = g.append("g");
-    addLegend();
+    var legendGroup = chartGroup.append("g");
 
-	var tips = g.append('g')
+    var axisGroup = chartGroup.append('g');
+
+    var lineGrounp = chartGroup.append('g');
+
+	var tips = chartGroup.append('g')
 		.attr('class', 'tips')
 
 	tips.append('rect')
@@ -86,8 +91,8 @@ function LineChart (data){
 	  .attr('y', 40)
 
 
-	var xScale = d3.scaleTime()
-	    .domain([new Date(d3.min(xAxisDates)), new Date(d3.max(xAxisDates))])
+	var xScale = d3.scaleLinear()
+	    .domain([0,xAxisDates.length-1])
 	    .range([0, width]);
 
 	var yScale = d3.scaleLinear()
@@ -98,20 +103,22 @@ function LineChart (data){
 
 	if(unit === "month"){
 		xAxis = d3.axisBottom(xScale)
-		  .ticks(d3.timeMonth)
+		  .ticks(xAxisDates.length)
 		  .tickFormat(function(d, i){
-		  		return d3.timeFormat("%-m")(d)
+	  		 	return d3.timeFormat('%-m')(new Date(xAxisDates[d]))
 		  })
 	} else if(unit === "year"){
 		xAxis = d3.axisBottom(xScale)
-		  .ticks(d3.timeYear)
+		  .ticks(xAxisDates.length)
+		  .tickFormat(function(d){
+		  	  return d3.timeFormat('%Y')(new Date(xAxisDates[d]))
+		  })
 	} else if(unit === "season"){
+		var seasonArr = ['春','夏','秋','冬'];
 		xAxis = d3.axisBottom(xScale)
-			.ticks(4)
+			.ticks(xAxisDates.length)
 			.tickFormat(function(d, i){
-		  		if(i == 0) return '夏';
-		  		else if(i == 1) return '秋';
-		  		else return '冬';
+		  		return seasonArr[i]
 		  })
 	}
 
@@ -124,11 +131,11 @@ function LineChart (data){
 	          : "" + s + " 百万伏";
 	    });
 
-	var xAxisGroup = g.append("g")
+	var xAxisGroup = axisGroup.append("g")
 	    .attr("transform", "translate(0," + height + ")")
 	    .call(customXAxis);
 
-	var yAxisGroup = g.append("g")
+	var yAxisGroup = axisGroup.append("g")
 	 .call(customYAxis);
 
 	function customXAxis(g) {
@@ -159,7 +166,6 @@ function LineChart (data){
         this.lineGrounp = null;
 	}
 	LineObject.prototype.init = function() {
-
     	var userData = this.userData;
     	var userName = this.userName
     	var xScale = this.xScale
@@ -167,14 +173,16 @@ function LineChart (data){
     	var group = this.group
     	this.lineGrounp = group.append('g')
 
+	    addLegend();
+
     	var line = d3.line()
-	  		.x(function(d) { 
-	  			return xScale(d.date); 
+	  		.x(function(d, i) { 
+	  			return xScale(i); 
 	  		})
 	  		.y(function(d) { 
 	  			return yScale(d.value); 
 	  		})
-	  		.curve(d3.curveCatmullRom.alpha(0.5))
+	  		.curve(d3.curveCatmullRom.alpha(0.7))
 
 	  	this.path = this.lineGrounp.append('path')
 	  				.attr('userName', userName)
@@ -197,16 +205,22 @@ function LineChart (data){
 			    d3.select(this).attr('r', 5);
 
 			    var m = d3.mouse(this),
-			        cx = m[0] - margin.left,
-			    	x0 = xScale.invert(cx),
-			   		i = (d3.bisector(function(d) {
-			      		return d.date;
-			    	}).left)(userData, x0);
+			        cx = m[0],
+			    	x0 = xScale.invert(cx);
 			 
-			    var d = userData[i];
+			    var d = userData[Math.round(x0)];
 			 
 			    function formatWording(d) {
-			      return '日期：' + d3.timeFormat('%Y-%m-%d')(d.date);
+			    	var seasonArr = ['春','夏','秋','冬'];
+			    	var result = '';
+			    	if(unit === "month"){
+						result = '月份：'+ d3.timeFormat('%Y')(d.date) + '年 ' + d3.timeFormat('%-m')(d.date) + '月'
+					} else if(unit === "year"){
+						result = '年份：' + d3.timeFormat('%Y')(d.date) + '年'
+					} else if(unit === "season"){
+						result = '季度：'+ d3.timeFormat('%Y')(d.date) + '年 ' +seasonArr[Number.parseInt((d3.timeFormat('%-m')(d.date)/3))]
+					}
+			      	return result;
 			    }
 			    wording1.text(formatWording(d));
 			    wording2.text('用电量：' + d.value);
@@ -225,7 +239,7 @@ function LineChart (data){
 			});
     }
     LineObject.prototype.remove = function(){
-    	this.path.remove();
+    	this.lineGrounp.remove();
     }
     LineObject.prototype.update = function(data){
     	var oldData = this.userData,
@@ -240,12 +254,12 @@ function LineChart (data){
 
     	var line = d3.line()
 	  		.x(function(d, i) { 
-	  			return xScale(d.date); 
+	  			return xScale(i); 
 	  		})
-	  		.y(function(d, i) { 
-	  			return yScale(d.value);
+	  		.y(function(d) { 
+	  			return yScale(d.value); 
 	  		})
-	  		.curve(d3.curveCatmullRom.alpha(0.5))
+	  		.curve(d3.curveCatmullRom.alpha(0.7))
 
 	  	path.attr('d', line(data));
 
@@ -259,28 +273,30 @@ function LineChart (data){
 			.data(data)
 			.attr('userName',userName)
 			.attr('class', 'linecircle')
-			.attr('cx', function(d) { 
-	  				return xScale(d.date); 
-	  		})
-			.attr('cy', function(d){
-				return yScale(d.value)
-			})
+			.attr('cx', line.x())
+			.attr('cy', line.y())
 			.attr('r', 3.5)
 			.attr("fill",lineColor)
 			.on('mouseover', function() {
 			    d3.select(this).attr('r', 5);
 
 			    var m = d3.mouse(this),
-			        cx = m[0] - margin.left,
-			    	x0 = xScale.invert(cx),
-			   		i = (d3.bisector(function(d) {
-			      		return d.date;
-			    	}).left)(data, x0);
+			        cx = m[0],
+			    	x0 = xScale.invert(cx);
 			 
-			    var d = data[i];
+			    var d = data[Math.round(x0)];
 			 
 			    function formatWording(d) {
-			      return '日期：' + d3.timeFormat('%Y-%m-%d')(d.date);
+			    	var seasonArr = ['春','夏','秋','冬'];
+			    	var result = '';
+			    	if(unit === "month"){
+						result = '月份：'+ d3.timeFormat('%Y')(d.date) + '年 ' + d3.timeFormat('%-m')(d.date) + '月'
+					} else if(unit === "year"){
+						result = '年份：' + d3.timeFormat('%Y')(d.date) + '年'
+					} else if(unit === "season"){
+						result = '季度：'+ d3.timeFormat('%Y')(d.date) + '年 ' +seasonArr[Number.parseInt((d3.timeFormat('%-m')(d.date)/3))]
+					}
+			      	return result;
 			    }
 			    wording1.text(formatWording(d));
 			    wording2.text('用电量：' + d.value);
@@ -302,12 +318,11 @@ function LineChart (data){
 	var lineObject = null;
 	for(var o in userDatas){
 		if(lineNames.indexOf(o) < lineNames.length){
-	    	lineObject = new LineObject(g, o, userDatas[o], lineColors[lineNames.indexOf(o)],xScale, yScale);
+	    	lineObject = new LineObject(lineGrounp, o, userDatas[o], lineColors[lineNames.indexOf(o)],xScale, yScale);
 	    	lineObject.init();
 	    	lines.push(lineObject);
     	}
     }
-
 
 	this.updateData = function (data){
 		var _duration = 1000;
@@ -315,8 +330,8 @@ function LineChart (data){
 		uploadData(data);
 
 		var oldDatalen = getObjLength(oldDatas),
-			dataLen = getObjLength(userDatas),
-			userDataslist = Object.getOwnPropertyNames(userDatas)
+			dataLen = getObjLength(userDatas);
+
 
 		var lineObject = null
 		for(var i=0; i<oldDatalen; i++){
@@ -327,21 +342,19 @@ function LineChart (data){
 			}else{
 				//删除线段
 	            	lineObject=lines[i];
-	            	lineObject.lineGrounp.remove();
+	            	lineObject.remove();
 	        }
 		}
         lines.splice(dataLen,oldDatalen-dataLen);
 		if(dataLen > oldDatalen){
 			//添加线段
 			for(var i = oldDatalen; i < dataLen; i++){
-				lineObject = new LineObject(g, userDataslist[i], userDatas[userDataslist[i]], lineColors[i],xScale, yScale);
+				lineObject = new LineObject(lineGrounp, userDataslist[i], userDatas[userDataslist[i]], lineColors[i],xScale, yScale);
 				lineObject.init();
 	    		lines.push(lineObject);
 			}
 		}
-
 	}
-
 
     function getMaxData(datas) {
         var maxdata=0;
@@ -386,11 +399,12 @@ function LineChart (data){
     	oldDatas = userDatas;
     	unit = data.unit;
 		userDatas = data.userDatas;
+		userDataslist = Object.getOwnPropertyNames(userDatas)
 		xAxisDates = data.xAxisDates;
 	 	lineNames = getLineName(userDatas);
 
-	 	xScale = d3.scaleTime()
-	    .domain([new Date(d3.min(xAxisDates)), new Date(d3.max(xAxisDates))])
+		xScale = d3.scaleLinear()
+	    .domain([0,xAxisDates.length-1])
 	    .range([0, width]);
 
 		yScale = d3.scaleLinear()
@@ -399,20 +413,22 @@ function LineChart (data){
 
 		if(unit === "month"){
 			xAxis = d3.axisBottom(xScale)
-			  .ticks(d3.timeMonth)
-			  .tickFormat(function(d, i){
-			  		return d3.timeFormat("%-m")(d)
-			  })
+		  		.ticks(xAxisDates.length)
+		  		.tickFormat(function(d, i){
+	  		 		return d3.timeFormat('%-m')(new Date(xAxisDates[d]))
+		  	})
 		} else if(unit === "year"){
 			xAxis = d3.axisBottom(xScale)
-			  .ticks(d3.timeYear)
+			  .ticks(xAxisDates.length)
+			  .tickFormat(function(d){
+			  	  return d3.timeFormat('%Y')(new Date(xAxisDates[d]))
+			  })
 		} else if(unit === "season"){
+			var seasonArr = ['春','夏','秋','冬'];
 			xAxis = d3.axisBottom(xScale)
-				.ticks(4)
+				.ticks(xAxisDates.length)
 				.tickFormat(function(d, i){
-			  		if(i == 0) return '夏';
-			  		else if(i == 1) return '秋';
-			  		else if(i == 2) return '冬';
+			  		return seasonArr[i]
 			  })
 		}
 
@@ -425,44 +441,44 @@ function LineChart (data){
 	          : "" + s + " 百万伏";
 	    });
 
-		xAxisGroup._groups[0][0].remove()
-		yAxisGroup._groups[0][0].remove()
+		axisGroup.selectAll('g').remove();
 
-		xAxisGroup = g.append("g")
+		xAxisGroup = axisGroup.append("g")
 		    .attr("transform", "translate(0," + height + ")")
 		    .call(customXAxis);
 
-		yAxisGroup = g.append("g")
+		yAxisGroup = axisGroup.append("g")
 		 .call(customYAxis);
 
 		addLegend()
     }
 
     function addLegend() {
-        var textGroup=legend.selectAll("text")
+        var textGroup=legendGroup.selectAll("text")
         .data(lineNames);
          
         textGroup.exit().remove();
          
-        legend.selectAll("text")
+        legendGroup.selectAll("text")
         .data(lineNames)
         .enter()
         .append("text")
         .text(function(d){return d;})
-        .attr("class","legend")
+        .attr("class","legendGroup")
         .attr("x",0)
         .attr("y", function(d,i) {return i*25;})
         .attr("fill",function(d,i){ return lineColors[i];});
          
-        var rectGroup=legend.selectAll("rect")
+        var rectGroup=legendGroup.selectAll("rect")
         .data(lineNames);
          
         rectGroup.exit().remove();
          
-        legend.selectAll("rect")
+        legendGroup.selectAll("rect")
         .data(lineNames)
         .enter()
         .append("rect")
+        .attr("class","legend-rect")
         .attr("userName",function(d){
         	return d;
         })
@@ -473,9 +489,19 @@ function LineChart (data){
         })
         .attr("width",12)
         .attr("height",12)
-        .attr("fill",function(d,i){ return lineColors[i];});
+        .attr("fill",function(d,i){ return lineColors[i];})
+        .on('mouseover',function(){
+        	var userName = this.getAttribute('userName');
+        	var lineObject = lines[userDataslist.indexOf(userName)]
+        	lineObject.path.style("stroke-width","4px")
+        })
+        .on('mouseout',function(){
+        	var userName = this.getAttribute('userName');
+        	var lineObject = lines[userDataslist.indexOf(userName)]
+        	lineObject.path.style("stroke-width","1.5px")
+        })
          
-        legend.attr("transform","translate("+(width+margin.left)+",0)");
+        legendGroup.attr("transform","translate("+(width+margin.left)+",0)");
     }
 
     function getObjLength(obj){

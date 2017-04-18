@@ -68,7 +68,6 @@ const App = function() {
 
 	var lineChart = new LineChart(dataOfMonth);
 	
-	
 	// 测试用的按钮
 	document.querySelector('#line-chart button').addEventListener('click',function(e){
 		if(++i === 3) i = 0;

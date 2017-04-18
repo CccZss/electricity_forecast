@@ -116,6 +116,12 @@ var config = {
 
 	plugins: [
 
+		new webpack.ProvidePlugin({
+		    $: "jquery",
+		    jQuery: "jquery",
+		    "window.jQuery": "jquery"
+		}),
+
 		new webpack.optimize.CommonsChunkPlugin({
 	        names: ['vendor', 'manifest']
 		}),

@@ -116,6 +116,12 @@ var config = {
 
 	plugins: [
 
+		new webpack.ProvidePlugin({
+		    $: "jquery",
+		    jQuery: "jquery",
+		    "window.jQuery": "jquery"
+		}),
+
 		new webpack.optimize.CommonsChunkPlugin({
 	        names: ['vendor', 'manifest']
 		}),
@@ -145,7 +151,7 @@ var config = {
 		    // chunks: ['index'],
 
 		    /**
-		     * 与chunks属性相反，排插掉不需要引入的chunk
+		     * 与chunks属性相反，排除掉不需要引入的chunk
 		     */
 		    // excludeChunks: ['index'],
 

@@ -21,7 +21,7 @@ var config = {
 	resolve: {
 		extensions: ['.js', '.jsx'],
 		alias: {
-	    	'~': path.resolve(__dirname, 'src')
+	    	'~': path.resolve(__dirname, 'src'),
 	  	}
 	},
 	// 定义一些loaders
@@ -110,6 +110,12 @@ var config = {
 
 	plugins: [
 
+		new webpack.ProvidePlugin({
+		    $: "jquery",
+		    jQuery: "jquery",
+		    "window.jQuery": "jquery"
+		}),
+
 		new webpack.optimize.CommonsChunkPlugin({
 	        names: ['vendor', 'manifest']
 		}),
@@ -131,7 +137,8 @@ var config = {
 	devServer: {
 		contentBase: './src',
 		historyApiFallback: true
-	}
+	},
+	devtool: 'source-map'
 };
 
 module.exports = config;

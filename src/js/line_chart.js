@@ -10,7 +10,7 @@ function LineChart (data){
 	var lines=[]; //保存折线图对象
  	var lineNames=[]; //保存系列名称
  	// var lineColors=["#F00","#09F","#0F0"];
- 	var lineColors=["#F00","#09F","#0F0","#FFFF00","#3A0088","#000","#FF0088","#FF0000","#FF8800","#00DDDD","#0000CC","#770077","#FF5511","#FFCC22","#00DD00"]
+ 	var lineColors=["#F00","#09F","#0F0","#FFFF00","#3A0088","#000","#FF0088","#FF0000","#FF8800","#00DDDD","#0000CC","#770077","#FF5511","#FFCC22","#00DD00","#f44336","#e91e63","#9c27b0","#673ab7"]
  	var currentLineNum=0;
 
  	var title="用电走势图";

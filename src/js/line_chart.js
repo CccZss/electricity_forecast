@@ -14,7 +14,7 @@ function LineChart (data){
  	var currentLineNum=0;
 
  	var title="用电走势图";
-  	var subTitle="2013年1月 至 2013年6月";
+  	var subTitle="";
 
   	var oldDatas = []
 

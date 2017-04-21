@@ -28,14 +28,8 @@ import LineChart from './js/line_chart.js';
  * @param  {[type]} xAxisDates [x轴的数据，即时间数组 ：['2011-01-01','2011-02-01','2011-03-01',.....]
  * @param  {[type]} users      [用户数据：
 	 *                             { 
-	 *                             		userA : [
-	 *	                              		{date:时间,value:2811382.47},
-	 *	                              		{},....
-	 *	                              	],  
-	 *                             	    userB : [
-	 *	                             		{date:时间,value:2811382.47},
-	 *	                             		{},....
-	 *	                             	],  
+		*                             		userA : ['8176279.31','7326919.18'...],  
+	 *                             	    userB : ['9176279.31','8326919.18'...],  
 	 *                             }
  * @param  {[type]} unit       ['year'/'season'/'month']
  * @return {[type]}            [ChartDatas]
@@ -57,16 +51,17 @@ import LineChart from './js/line_chart.js';
 			userDatas: userDatas
 		}
 	}
-	var dataOfMonth = getChartDatas(month,monthUsers,'month')
-	var dataOfYear = getChartDatas(year,yearUsers,'year')
-	var dataOfSeason = getChartDatas(season,seasonUsers,'season')
-	var arr = [dataOfSeason,dataOfMonth,dataOfYear]
+	var dataOfMonth = getChartDatas(month,monthUsers,'month');
+	var dataOfYear = getChartDatas(year,yearUsers,'year');
+	var dataOfSeason = getChartDatas(season,seasonUsers,'season');
+	var arr = [dataOfSeason,dataOfMonth,dataOfYear];
 	var i = 0;
 
 
 const App = function() {
 
 	var lineChart = new LineChart(dataOfMonth);
+	// lineChart.updateData(arr[i])
 	
 	// 测试用的按钮
 	document.querySelector('#line-chart button').addEventListener('click',function(e){

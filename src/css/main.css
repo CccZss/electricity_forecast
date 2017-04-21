@@ -4,6 +4,11 @@
 		height: 100%;
 		min-width: 1500px;
 	}
+
+	li{
+		list-style-type: none;
+	}
+
 	.user-nav {
 		position: fixed;
 		left: 0;
@@ -11,10 +16,20 @@
 
 		width: 200px;
 		min-height: 100%;
+		padding-left: 0.5%;
+		padding-top: 1%;
 
 		background-color: #eaeaea;
 
 		box-shadow: 2px 2px 5px 2px #464646;
+	}
+
+	.list-user{
+		position: relative;
+		left: 0;
+		top: 20px;
+
+		
 	}
 
 	.contained { 
